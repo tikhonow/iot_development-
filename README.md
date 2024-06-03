@@ -10,3 +10,7 @@
 
 ![Alt текст](img.png)
 
+## task 6
+
+![Alt текст](img_1.png)
+
