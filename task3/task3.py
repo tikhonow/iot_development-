@@ -3,7 +3,30 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QVBoxLayout, Q
     QInputDialog
 from PyQt5.QtCore import Qt, QAbstractItemModel, QModelIndex
 
+def convert_to_treeitem(data, parent=None):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            item = TreeItem([key], parent)
+            parent.appendChild(item)
+            convert_to_treeitem(value, item)
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            item = TreeItem([str(index)], parent)
+            parent.appendChild(item)
+            convert_to_treeitem(value, item)
+    else:
+        item = TreeItem([str(data)], parent)
+        parent.appendChild(item)
 
+
+def convert_treeitem_to_dict(item):
+    if item.childCount() > 0:
+        result = {}
+        for child in item.childItems:
+            result[child.data(0)] = convert_treeitem_to_dict(child)
+        return result
+    else:
+        return item.data(0)
 class TreeItem:
     def __init__(self, data, parent=None):
         self.parentItem = parent
@@ -129,6 +152,20 @@ class TreeModel(QAbstractItemModel):
                     indentations.pop()
             parent = parents[-1]
             parent.appendChild(TreeItem(columnData, parent))
+
+    def clear(self):
+        self.beginResetModel()
+        self.rootItem = TreeItem(("Title",))
+        self.endResetModel()
+
+    def load_from_dict(self, data):
+        self.beginResetModel()
+        self.rootItem = TreeItem(("Title",))
+        convert_to_treeitem(data, self.rootItem)
+        self.endResetModel()
+
+    def to_dict(self):
+        return convert_treeitem_to_dict(self.rootItem)
 
 
 class MainWindow(QMainWindow):
